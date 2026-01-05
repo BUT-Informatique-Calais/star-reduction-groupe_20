@@ -81,12 +81,12 @@ def multiErosionKernel(fitsFile: str, nbErosion: int, tailleKernel: int)->None :
 
 if __name__ == "__main__": 
     #on fait 5 erosion et un kernel de 1 
-    multiErosionKernel("./examples/HorseHead.fits", 5, 1) 
-    multiErosionKernel("./examples/test_M31_linear.fits", 5, 1)
-    multiErosionKernel("./examples/test_M31_raw.fits", 5, 1)
+    multiErosionKernel("./../examples/HorseHead.fits", 5, 1) 
+    multiErosionKernel("./../examples/test_M31_linear.fits", 5, 1)
+    multiErosionKernel("./../examples/test_M31_raw.fits", 5, 1)
     
     #on fait 5 erosion et un kernel de 10 
-    multiErosionKernel("./examples/HorseHead.fits", 5, 10) 
-    multiErosionKernel("./examples/test_M31_linear.fits", 5, 10)
-    multiErosionKernel("./examples/test_M31_raw.fits", 5, 10)
+    multiErosionKernel("./../examples/HorseHead.fits", 5, 10) 
+    multiErosionKernel("./../examples/test_M31_linear.fits", 5, 10)
+    multiErosionKernel("./../examples/test_M31_raw.fits", 5, 10)
     

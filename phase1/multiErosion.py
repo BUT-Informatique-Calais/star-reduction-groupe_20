@@ -80,6 +80,6 @@ def multiErosion(fitsFile: str, nbErosion: int)->None :
     
 
 if __name__ == "__main__": 
-    multiErosion("./examples/HorseHead.fits", 1000) 
-    multiErosion("./examples/test_M31_linear.fits", 1000)
-    multiErosion("./examples/test_M31_raw.fits", 1000) 
+    multiErosion("./../examples/HorseHead.fits", 1000) 
+    multiErosion("./../examples/test_M31_linear.fits", 1000)
+    multiErosion("./../examples/test_M31_raw.fits", 1000) 
