@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         # Ajouter le logo dans la barre de menu
         logo_label = QLabel()
         logo_pixmap = QPixmap("assets/logo.webp")  
-        logo_pixmap = logo_pixmap.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        logo_pixmap = logo_pixmap.scaled(30, 30, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         logo_label.setPixmap(logo_pixmap)
         logo_label.setAlignment(Qt.AlignCenter)  
         logo_label.setContentsMargins(0, 10, 0, 10)
@@ -123,9 +123,14 @@ class MainWindow(QMainWindow):
         tab1_layout.addWidget(QLabel("Contenu de l'interface"))
         self.tab1.setLayout(tab1_layout)
 
-        # Contenu du deuxième onglet
+        # Contenu du deuxième onglet - Terminal
         tab2_layout = QVBoxLayout()
-        tab2_layout.addWidget(QLabel("Contenu du terminal"))
+        tab2_layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Créer l'instance du Terminal
+        self.terminal = Terminal()
+        tab2_layout.addWidget(self.terminal)
+        
         self.tab2.setLayout(tab2_layout)
 
     def newWindow(self) -> None:
