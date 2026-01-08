@@ -12,9 +12,8 @@ from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import Qt
 
 from MenuBar import MenuBar
-from Label import Label
-from Layout import Layout
 from Terminal import Terminal
+from Interface import Interface
 
 import numpy as np
 from astropy.io import fits
@@ -111,17 +110,13 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.tabs)
 
         # Créer les onglets
-        self.tab1 = QWidget()
+        self.interface = Interface(parent=self)
         self.tab2 = QWidget()
 
         # Ajouter les onglets au QTabWidget
-        self.tabs.addTab(self.tab1, "Interface")
+        self.tabs.addTab(self.interface, "Interface")
         self.tabs.addTab(self.tab2, "Terminal")
-
-        # Contenu du premier onglet
-        tab1_layout = QVBoxLayout()
-        tab1_layout.addWidget(QLabel("Contenu de l'interface"))
-        self.tab1.setLayout(tab1_layout)
+        
 
         # Contenu du deuxième onglet - Terminal
         tab2_layout = QVBoxLayout()
@@ -174,15 +169,55 @@ class MainWindow(QMainWindow):
                 QImage.Format_Grayscale8
             )
 
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
-            self.imageLabel.adjustSize()
+            pixmap = QPixmap.fromImage(image)
 
+            scaled_pixmap = pixmap.scaled(
+                self.interface.labelImage.size(),  # taille actuelle du label
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+
+            self.interface.labelImage.setPixmap(scaled_pixmap)
+                        
         except Exception as e:
             QMessageBox.critical(
                 self,
                 "Erreur",
                 f"Impossible d'ouvrir le fichier FITS\n\n{e}"
             )
+
+    def saveImage(self) -> None:
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Enregistrer l'image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.bmp)"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            pixmap = self.interface.labelImage.pixmap()
+
+            if pixmap and not pixmap.isNull():
+                pixmap.save(file_path)
+                self.terminal.write(f"Image enregistrée : {file_path}")
+                QMessageBox.information(
+                    self,
+                    "Succès",
+                    "Image enregistrée avec succès !"
+                )
+            else:
+                raise ValueError("Aucune image à enregistrer")
+
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Erreur",
+                f"Impossible d'enregistrer l'image\n\n{e}"
+            )
+            self.terminal.write(f"Erreur : {e}")
 
     def closeEvent(self, event) -> None:
         reponse = QMessageBox.question(

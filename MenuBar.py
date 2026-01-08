@@ -7,21 +7,26 @@ class MenuBar(QMenuBar):
 
         file_menu = self.addMenu('File')
 
-        newAction = QAction('&New', self)
+        newAction : QAction = QAction('&New', self)
         newAction.setShortcut('Ctrl+N')
         newAction.triggered.connect(mainWindow.newWindow)
 
-        openAction = QAction('&Open', self)
+        openAction : QAction = QAction('&Open', self)
         openAction.setShortcut('Ctrl+O')
         openAction.triggered.connect(mainWindow.openImage)
 
-        exitAction = QAction('&Exit', self)
+        saveAction : QAction = QAction('&Save', self)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.triggered.connect(mainWindow.saveImage)
+
+        exitAction : QAction = QAction('&Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.triggered.connect(mainWindow.close)
 
         
         file_menu.addAction(newAction)
         file_menu.addAction(openAction)
+        file_menu.addAction(saveAction)
         file_menu.addAction(exitAction)
         
         
