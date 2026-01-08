@@ -15,24 +15,28 @@ class LayoutSetting(QVBoxLayout):
     ) -> None:
         super().__init__()
 
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setSpacing(1)  # très serré
+        self.setContentsMargins(0, 0, 0, 5)
+        self.setSpacing(5)
 
         self.labelText = QLabel(textLabel)
-        self.labelText.setFixedHeight(14)
+        self.labelText.setFixedHeight(25)
         self.labelText.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.labelText.setStyleSheet("""
             QLabel {
-                font-size: 11px;
+                color: white;
+                background-color: #22283A;
+                font-weight: bold;
+                font-size: 14px;
+                padding: 5px;
+                border-radius: 3px;
                 margin: 0px;
-                padding: 0px;
             }
         """)
 
         self.slider = Slider(Qt.Horizontal)
         self.slider.setRange(min_value, max_value)
         self.slider.setValue(default_value)
+        self.slider.setMinimumHeight(40)  
 
         self.addWidget(self.labelText)
         self.addWidget(self.slider)
-
