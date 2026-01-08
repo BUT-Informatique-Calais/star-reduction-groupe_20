@@ -8,32 +8,48 @@ import os
 import numpy.typing as npt
 
 
-def getMask(imageData: npt.NDArray[np.floating], fwhm: float = 3.0, threshold: float = 1.0) -> npt.NDArray[np.uint8]:
-    """
-    Génère un masque binaire des étoiles en utilisant DAOStarFinder.
+def getMask(fitsFile: str, fwhm: float = 3.0, threshold: float = 1.0) -> npt.NDArray[np.uint8]:
+    """Génère un masque binaire des étoiles en utilisant DAOStarFinder.
     
     Args:
-        imageData: Données de l'image
-        fwhm: Largeur à mi-hauteur de l'étoile 
-        threshold: Le seuil de détection 
+        fitsFile (str): Chemin du fichier fits
+        fwhm (float): Largeur à mi-hauteur de l'étoile 
+        threshold (float): Le seuil de détection 
         
     Returns:
-        mask: Image binaire où les étoiles détectées sont marquées.
+        mask (npt.NDArray[np.uint8]): Image binaire où les étoiles détectées sont marquées.
     """
+    # Open and read the FITS file
+    hdul: fits.HDUList = fits.open(fitsFile)
+    
+    # Access the data from the primary HDU
+    data: np.ndarray = hdul[0].data
+    
+    # Handle both monochrome and color images
+    if data.ndim == 3: 
+        # Si (3, H, W) -> (H, W, 3)
+        if data.shape[0] == 3:
+            data = np.transpose(data, (1, 2, 0))
+        
+        gray_data: np.ndarray = np.mean(data, axis=2)
+    else: 
+        gray_data: np.ndarray = data
+
+
     # Estimation du bruit de fond
     mean: float
     median: float
     std: float
-    mean, median, std = sigma_clipped_stats(imageData, sigma=3.0)
+    mean, median, std = sigma_clipped_stats(gray_data, sigma=3.0)
     
     # Configuration de DAOStarFinder
     daofind = DAOStarFinder(fwhm=fwhm, threshold=threshold * std) 
     
     # Détection des sources
-    sources: Table | None = daofind(imageData - median) 
+    sources: Table | None = daofind(gray_data - median) 
     
     # Création du masque vide (noir) typé explicitement en uint8
-    mask: npt.NDArray[np.uint8] = np.zeros_like(imageData, dtype=np.uint8)
+    mask: npt.NDArray[np.uint8] = np.zeros_like(gray_data, dtype=np.uint8)
     
     # Si pas d'étoiles détectées
     if sources is None:
@@ -53,40 +69,20 @@ def getMask(imageData: npt.NDArray[np.floating], fwhm: float = 3.0, threshold: f
         
         # Couleur 255 (blanc), épaisseur -1 (rempli)
         cv.circle(mask, center, radius, 255, thickness=-1)
+    
+    hdul.close()
         
-    print(f"Nombre d'étoiles détectées : {len(sources)}")
+    # print(f"Nombre d'étoiles détectées : {len(sources)}")
     return mask
 
 
-def processFitsFile(fitsFile: str, fwhm: float = 3, threshold: float = 1) -> None:
+def saveMasque(fitsFile: str, mask: npt.NDArray[np.uint8]) -> None:
     """Traitement d'un fichier fits
     
     Args:
         fitsFile: Chemin du fichier fits
-        fwhm: largeur de l'étoile
-        threshold: seuil de détection
-
-    REMARQUE : il seurai bien de pouvoir ajuster fwhm et threshold dans l'interface !!! 
+        mask: masque binaire 
     """
-    # print(f"Traitement du fichier : {fitsFile}")
-    hdul: fits.HDUList = fits.open(fitsFile)
-    
-    data: np.ndarray = hdul[0].data
-    
-    # Gestion des dimensions (couleur vs monochrome)
-    if data.ndim == 3: #si couleur 
-        # Si (3, H, W) -> (H, W, 3)
-        if data.shape[0] == 3:
-            data = np.transpose(data, (1, 2, 0))
-        
-        gray_data: np.ndarray = np.mean(data, axis=2)
-    else: #si monochrome
-        gray_data: np.ndarray = data
-
-
-    # Création du masque avec DAOStarFinder
-    mask: np.ndarray = getMask(gray_data, fwhm, threshold) 
-
     # Récupération du nom du fichier : le dernier "/" + retirer le ".fits" 
     fileName: str = fitsFile.split("/")[-1].removesuffix(".fits") 
 
@@ -95,10 +91,9 @@ def processFitsFile(fitsFile: str, fwhm: float = 3, threshold: float = 1) -> Non
     os.makedirs("results/" + fileName, exist_ok=True)
 
     cv.imwrite("results/" + fileName + "/mask.png", mask)
-    hdul.close()
 
 if __name__ == "__main__":
-    processFitsFile("./../examples/HorseHead.fits") 
-    processFitsFile("./../examples/test_M31_linear.fits")
-    processFitsFile("./../examples/test_M31_raw.fits")
+    saveMasque("./../examples/HorseHead.fits", getMask("./../examples/HorseHead.fits")) 
+    saveMasque("./../examples/test_M31_linear.fits", getMask("./../examples/test_M31_linear.fits"))
+    saveMasque("./../examples/test_M31_raw.fits", getMask("./../examples/test_M31_raw.fits"))
     
