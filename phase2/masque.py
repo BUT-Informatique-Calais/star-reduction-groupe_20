@@ -4,8 +4,8 @@ from photutils.detection import DAOStarFinder
 from astropy.table import Table
 import cv2 as cv
 import numpy as np
-import os
 import numpy.typing as npt
+from saveImage import saveImage
 
 
 def getMask(fitsFile: str, fwhm: float = 3.0, threshold: float = 1.0) -> npt.NDArray[np.uint8]:
@@ -70,30 +70,13 @@ def getMask(fitsFile: str, fwhm: float = 3.0, threshold: float = 1.0) -> npt.NDA
         # Couleur 255 (blanc), épaisseur -1 (rempli)
         cv.circle(mask, center, radius, 255, thickness=-1)
     
-    hdul.close()
-        
     # print(f"Nombre d'étoiles détectées : {len(sources)}")
+
+    hdul.close()
     return mask
 
-
-def saveMasque(fitsFile: str, mask: npt.NDArray[np.uint8]) -> None:
-    """Traitement d'un fichier fits
-    
-    Args:
-        fitsFile: Chemin du fichier fits
-        mask: masque binaire 
-    """
-    # Récupération du nom du fichier : le dernier "/" + retirer le ".fits" 
-    fileName: str = fitsFile.split("/")[-1].removesuffix(".fits") 
-
-    # création du dossier pour stockage des résultat : 
-    os.makedirs("results", exist_ok=True)
-    os.makedirs("results/" + fileName, exist_ok=True)
-
-    cv.imwrite("results/" + fileName + "/mask.png", mask)
-
 if __name__ == "__main__":
-    saveMasque("./../examples/HorseHead.fits", getMask("./../examples/HorseHead.fits")) 
-    saveMasque("./../examples/test_M31_linear.fits", getMask("./../examples/test_M31_linear.fits"))
-    saveMasque("./../examples/test_M31_raw.fits", getMask("./../examples/test_M31_raw.fits"))
-    
+    print("----------TEST----------")
+    saveImage(getMask("./../examples/HorseHead.fits"), "mask", "results/HorseHead")
+    saveImage(getMask("./../examples/test_M31_linear.fits"), "mask", "results/test_M31_linear")
+    saveImage(getMask("./../examples/test_M31_raw.fits"), "mask", "results/test_M31_raw")
