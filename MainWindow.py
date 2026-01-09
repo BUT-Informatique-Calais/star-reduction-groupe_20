@@ -10,14 +10,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import Qt
-
+from original import fits_to_png
 from MenuBar import MenuBar
 from Terminal import Terminal
 from Interface import Interface
-
-import numpy as np
-from astropy.io import fits
-
 
 class MainWindow(QMainWindow):
 
@@ -27,7 +23,7 @@ class MainWindow(QMainWindow):
         # Fenêtre principale
         self.setWindowTitle("Editeur image FITS")
         self.setWindowIcon(QIcon("./assets/icons/planete-terre.png"))
-        self.setGeometry(100, 100, 1000, 700)
+        self.setFixedSize(1200, 900)
 
         # Appliquer le style CSS
         self.setStyleSheet("""
@@ -117,6 +113,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.interface, "Interface")
         self.tabs.addTab(self.tab2, "Terminal")
         
+        self.original_pixmap = None
 
         # Contenu du deuxième onglet - Terminal
         tab2_layout = QVBoxLayout()
@@ -133,58 +130,53 @@ class MainWindow(QMainWindow):
         self.nouvelle_fenetre.show()
         self.close()
 
-    def openImage(self) -> None:
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Ouvrir une image FITS",
-            "",
-            "FITS (*.fits *.fit *.fts)"
-        )
+    def openImage(self, file_path=None) -> None:
+        if file_path is None:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Ouvrir une image",
+                "",
+                "Images (*.png *.fits)"
+            )
 
         if not file_path:
             return
 
-        try:
-            # Lecture FITS
-            with fits.open(file_path) as hdul:
-                data = hdul[0].data
+        if file_path.lower().endswith(".fits"):
+            # Si l'utilisateur ouvre un FITS depuis le bouton, on convertit
+            file_path = fits_to_png(file_path)
 
-            if data is None:
-                raise ValueError("Fichier FITS invalide")
+        pixmap = QPixmap(file_path)
+        if pixmap.isNull():
+            QMessageBox.critical(self, "Erreur", "Impossible d'ouvrir l'image")
+            return
 
-            # Conversion en image affichable
-            data = data.astype(float)
-            data -= data.min()
-            data /= data.max()
-            data *= 255
-            data = data.astype(np.uint8)
+        self.original_pixmap = pixmap
+        self.updateImageDisplay()
+        self.terminal.write(f"Image ouverte : {file_path}")
 
-            height, width = data.shape
 
-            image = QImage(
-                data.data,
-                width,
-                height,
-                width,
-                QImage.Format_Grayscale8
-            )
+    def updateImageDisplay(self):
+        if self.original_pixmap is None:
+            return
 
-            pixmap = QPixmap.fromImage(image)
+        zoom_factor = self.interface.zoom_slider.value() / 100.0
 
-            scaled_pixmap = pixmap.scaled(
-                self.interface.labelImage.size(),  # taille actuelle du label
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
+        scaled_pixmap = self.original_pixmap.scaled(
+            int(self.original_pixmap.width() * zoom_factor),
+            int(self.original_pixmap.height() * zoom_factor),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
 
-            self.interface.labelImage.setPixmap(scaled_pixmap)
-                        
-        except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Erreur",
-                f"Impossible d'ouvrir le fichier FITS\n\n{e}"
-            )
+
+        self.interface.labelImage.setPixmap(scaled_pixmap)
+
+
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.updateImageDisplay()
 
     def saveImage(self) -> None:
         file_path, _ = QFileDialog.getSaveFileName(

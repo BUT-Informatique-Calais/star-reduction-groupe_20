@@ -2,6 +2,10 @@ from PyQt5.QtWidgets import QPlainTextEdit
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCursor
 
+import sys
+from io import StringIO
+
+
 class Terminal(QPlainTextEdit):
 
     def __init__(self, parent = None) -> None:
@@ -120,5 +124,27 @@ class Terminal(QPlainTextEdit):
             self.write("Commandes disponibles:")
             self.write("  clear - Effacer le terminal")
             self.write("  help  - Afficher cette aide")
+            self.write("Vous pouvez aussi exécuter des commandes Python !")
         else:
-            self.write(f"Commande inconnue: {command}")
+            # Exécuter le code Python
+            old_stdout = sys.stdout  # sauvegarder l'ancien stdout
+            redirected_output = sys.stdout = StringIO()
+            try:
+                # Essayer d'évaluer une expression (comme 2+2)
+                result = eval(command)
+                if result is not None:
+                    self.write(str(result))
+            except SyntaxError:
+                # Si ce n'est pas une expression, exécuter comme instruction
+                try:
+                    exec(command)
+                except Exception as e:
+                    self.write(f"Erreur: {e}")
+            except Exception as e:
+                self.write(f"Erreur: {e}")
+            finally:
+                # récupérer tout ce qui a été imprimé
+                output = redirected_output.getvalue()
+                if output:
+                    self.write(output.strip())
+                sys.stdout = old_stdout
