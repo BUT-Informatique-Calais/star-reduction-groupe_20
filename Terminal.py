@@ -120,9 +120,13 @@ class Terminal(QPlainTextEdit):
             self.write("Bienvenue dans le terminal")
             self.appendPlainText(">")
             self.updateProtectedPosition()
+        elif command.lower() == "exit":
+            self.write("Fermeture du terminal...")
+            self.window().close()
         elif command.lower() == "help":
             self.write("Commandes disponibles:")
             self.write("  clear - Effacer le terminal")
+            self.write("  exit - Quitter la fenêtre")
             self.write("  help  - Afficher cette aide")
             self.write("Vous pouvez aussi exécuter des commandes Python !")
         else:

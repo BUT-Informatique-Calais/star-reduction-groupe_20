@@ -5,7 +5,7 @@ from Buttons import Buttons
 from Layout import Layout
 from LayoutSetting import LayoutSetting
 from Label import Label
-import original
+import Logique.original
 
 class Interface(QWidget):
 
@@ -36,6 +36,17 @@ class Interface(QWidget):
         left_top_layout.addLayout(setting_kernel)
         left_top_layout.addLayout(setting_ksize)
         left_top_layout.addLayout(setting_sigmax)
+
+        self.settings = [
+            setting_fwhm,
+            setting_threshold,
+            setting_kernel,
+            setting_ksize,
+            setting_sigmax
+        ]
+
+        for s in self.settings:
+            s.slider.valueChanged.connect(self.parent.updateImageFromSliders)
 
         # Layout chemin images possibles
         left_bottom_layout : Layout = Layout()
@@ -79,7 +90,7 @@ class Interface(QWidget):
         self.zoom_slider = QSlider(Qt.Horizontal)
         self.zoom_slider.setMinimum(10)
         self.zoom_slider.setMaximum(400)  # jusqu'à 400%
-        self.zoom_slider.setValue(100)
+        self.zoom_slider.setValue(50)
         self.zoom_slider.setTickInterval(10)
         self.zoom_slider.setTickPosition(QSlider.TicksBelow)
         self.zoom_slider.valueChanged.connect(self.updateZoom)
@@ -111,8 +122,8 @@ class Interface(QWidget):
         self.setLayout(self.mainLayout)
 
     def updateZoom(self):
-        if self.parent:
-            self.parent.updateImageDisplay()
+        self.parent.displayImage(self.parent.processed_image)
+
 
     def loadFitsList(self):
         """Charge tous les fichiers .fits du dossier ./imagesFits"""
@@ -125,11 +136,12 @@ class Interface(QWidget):
                     self.fits_list.addItem(item)
 
     def openSelectedFits(self, item):
-        """Ouvre l'image FITS sélectionnée depuis la liste."""
         fits_path = os.path.join("./imagesFits", item.text())
         
+        self.parent.current_fits_path = fits_path
+        
         # Convertir en PNG
-        png_path = original.fits_to_png(fits_path)
+        png_path = Logique.original.fits_to_png(fits_path=fits_path)
 
         # Utiliser ton openImage pour afficher le PNG
         self.parent.openImage(png_path)
