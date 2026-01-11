@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
 
         # Fenêtre principale
         self.setWindowTitle("Editeur image FITS")
-        self.setWindowIcon(QIcon("./assets/icons/planete-terre.png"))
+        self.setWindowIcon(QIcon("./assets/logo.webp"))
         self.setFixedSize(1200, 900)
 
         # Appliquer le style CSS
